@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaRetail – Marketing Intelligence Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #1a2e4a;
+    --teal: #0e7c86;
+    --amber: #e07b39;
+    --green: #2a9d5c;
+    --red: #c0392b;
+    --light: #f4f7fb;
+    --mid: #e8edf5;
+    --text: #222;
+    --muted: #5a6a7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f3f8; color: var(--text); }
+
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(135deg, var(--navy) 0%, #2c4a7a 100%);
+    color: #fff; padding: 70px 60px 60px; min-height: 220px;
+    border-bottom: 5px solid var(--teal);
+  }
+  .cover h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.5px; }
+  .cover h2 { font-size: 1.25rem; font-weight: 400; opacity: 0.8; margin-top: 8px; }
+  .cover-meta { margin-top: 28px; display: flex; gap: 40px; font-size: 0.9rem; opacity: 0.75; }
+
+  /* ── Layout ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 0 20px 60px; }
+  
+  .section { margin-top: 48px; }
+  .section-title {
+    font-size: 1.5rem; font-weight: 700; color: var(--navy);
+    padding-bottom: 10px; border-bottom: 3px solid var(--teal);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .tag {
+    font-size: 0.7rem; background: var(--teal); color: #fff;
+    padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px;
+  }
+
+  .subsection-title { font-size: 1.1rem; font-weight: 600; color: var(--navy); margin: 28px 0 12px; }
+  p, li { line-height: 1.7; color: #333; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 5px; }
+
+  /* ── KPI Cards ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; margin-top: 20px; }
+  .kpi {
+    background: #fff; border-radius: 10px; padding: 20px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-top: 4px solid var(--teal);
+  }
+  .kpi-val { font-size: 2rem; font-weight: 700; color: var(--navy); }
+  .kpi-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Charts ── */
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  .chart-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }
+  .chart-box {
+    background: #fff; border-radius: 10px; padding: 22px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .chart-box h4 { font-size: 0.9rem; font-weight: 600; color: var(--navy); margin-bottom: 16px; }
+  .chart-box canvas { max-height: 240px; }
+
+  /* ── Segment Cards ── */
+  .seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 18px; margin-top: 20px; }
+  .seg-card {
+    border-radius: 12px; padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-left: 6px solid;
+  }
+  .seg-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .seg-card .badge {
+    display: inline-block; font-size: 0.72rem; font-weight: 600;
+    padding: 2px 9px; border-radius: 20px; margin-bottom: 12px;
+  }
+  .seg-card p { font-size: 0.88rem; color: #444; line-height: 1.6; margin-bottom: 10px; }
+  .seg-stat { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+  .seg-stat-row { display: flex; justify-content: space-between; font-size: 0.82rem; border-bottom: 1px solid #eee; padding: 3px 0; }
+  .seg-stat-row span:last-child { font-weight: 600; color: var(--navy); }
+
+  /* Segment colors */
+  .seg-champions  { border-color: #2a9d5c; background: #f0fdf6; }
+  .seg-champions h3 { color: #2a9d5c; }
+  .seg-champions .badge { background: #2a9d5c; color: #fff; }
+
+  .seg-engaged    { border-color: #0e7c86; background: #f0fafb; }
+  .seg-engaged h3 { color: #0e7c86; }
+  .seg-engaged .badge { background: #0e7c86; color: #fff; }
+
+  .seg-discount   { border-color: #e07b39; background: #fff8f3; }
+  .seg-discount h3 { color: #c05a1a; }
+  .seg-discount .badge { background: #e07b39; color: #fff; }
+
+  .seg-dormant    { border-color: #888; background: #f7f7f7; }
+  .seg-dormant h3 { color: #555; }
+  .seg-dormant .badge { background: #888; color: #fff; }
+
+  /* ── Summary Table ── */
+  table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 0.88rem; }
+  th { background: var(--navy); color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 9px 12px; border-bottom: 1px solid #e0e5ee; }
+  tr:nth-child(even) td { background: var(--light); }
+  tr:hover td { background: var(--mid); }
+  .tag-green { background: #d4f5e4; color: #1a7a44; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .tag-amber { background: #fde8d0; color: #a04010; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .tag-red   { background: #fbd5d5; color: #8b1a1a; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .tag-grey  { background: #e8e8e8; color: #444; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+  /* ── Action Cards ── */
+  .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap: 20px; margin-top: 20px; }
+  .action-card {
+    background: #fff; border-radius: 12px; padding: 24px 22px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-top: 4px solid;
+  }
+  .action-card:nth-child(1) { border-color: var(--green); }
+  .action-card:nth-child(2) { border-color: var(--teal); }
+  .action-card:nth-child(3) { border-color: var(--amber); }
+  .action-num { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .action-card h3 { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin: 6px 0 12px; }
+  .action-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .action-meta-item { background: var(--light); border-radius: 6px; padding: 8px 10px; }
+  .action-meta-item .label { font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.4px; }
+  .action-meta-item .val { font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-top: 2px; }
+
+  /* ── Callout ── */
+  .callout { background: #fff3cd; border-left: 4px solid #e6a817; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout-info { background: #e7f5ff; border-left: 4px solid #1a78c2; }
+  .callout p { margin: 0; font-size: 0.9rem; }
+  .callout strong { color: var(--navy); }
+
+  /* ── Finding Rows ── */
+  .finding { display: flex; gap: 16px; background: #fff; border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 1px 5px rgba(0,0,0,0.06); }
+  .finding-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .finding-body h4 { font-size: 0.95rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .finding-body p { font-size: 0.88rem; color: #444; }
+
+  footer { background: var(--navy); color: #aab; text-align: center; padding: 22px; font-size: 0.82rem; margin-top: 60px; }
+
+  @media (max-width: 700px) {
+    .chart-row, .chart-row-3 { grid-template-columns: 1fr; }
+    .cover h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════ COVER ══════════════════════╗ -->
+<div class="cover">
+  <h1>NovaRetail — Marketing Intelligence Report</h1>
+  <h2>Customer Segmentation, Campaign Effectiveness &amp; Strategic Budget Recommendations</h2>
+  <div class="cover-meta">
+    <span>📊 Dataset: 457 customers (merged RFM + marketing profiles)</span>
+    <span>🗓 Analysis Date: March 2026</span>
+    <span>📦 Orders dataset: 4,378 transactions</span>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ╔══════════════════════ EXECUTIVE SUMMARY ══════════════════════╗ -->
+<div class="section">
+  <div class="section-title">Executive Summary <span class="tag">OVERVIEW</span></div>
+  <p style="margin-top:16px;">
+    NovaRetail's 457 active customers were segmented into four distinct behavioural clusters using K-means clustering on recency, frequency, monetary value, email engagement, website visits, and discount usage. The analysis reveals a clear hierarchy of customer value and uncovers three critical strategic insights: (1) email engagement is a poor predictor of long-term customer value, (2) discount-heavy customers represent a margin risk rather than a revenue opportunity, and (3) paid-search and organic-search acquisition channels deliver significantly higher lifetime value than the dominant email-acquisition channel.
+  </p>
+
+  <div class="kpi-grid" style="margin-top:22px;">
+    <div class="kpi"><div class="kpi-val">457</div><div class="kpi-label">Analysed customers</div></div>
+    <div class="kpi"><div class="kpi-val">€944</div><div class="kpi-label">Avg. spend per customer</div></div>
+    <div class="kpi"><div class="kpi-val">€2,221</div><div class="kpi-label">Avg. Customer Lifetime Value</div></div>
+    <div class="kpi"><div class="kpi-val">9.6×</div><div class="kpi-label">Avg. purchase frequency</div></div>
+    <div class="kpi"><div class="kpi-val">45%</div><div class="kpi-label">Customers who used discounts</div></div>
+    <div class="kpi"><div class="kpi-val">49%</div><div class="kpi-label">Acquired via email channel</div></div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════ T1 – DATA EXPLORATION ══════════════════════╗ -->
+<div class="section">
+  <div class="section-title">T1. Data Exploration <span class="tag">TECHNICAL</span></div>
+
+  <div class="subsection-title">Dataset Overview &amp; Missing Values</div>
+  <p>Three files were merged on <code>client_id</code>. The RFM file contained 457 complete records (no missing values). The marketing profile file (560 rows) had 39 missing observations in age, income, website_visits, and email_opens — all below 7% threshold and imputed with column medians for clustering. 103 customers appeared in the marketing file but lacked RFM data and were excluded from clustering.</p>
+
+  <div class="callout">
+    <p><strong>Missing value strategy:</strong> Median imputation was applied to age (7%), income (7%), website_visits (7%) and email_opens (7%) prior to clustering. All imputed values fell within reasonable ranges and did not distort cluster centroids materially.</p>
+  </div>
+
+  <div class="subsection-title">Key Variable Distributions</div>
+  <div class="chart-row">
+    <div class="chart-box"><h4>Purchase Frequency Distribution</h4><canvas id="chartFreq"></canvas></div>
+    <div class="chart-box"><h4>Total Monetary Spend Distribution (€)</h4><canvas id="chartMon"></canvas></div>
+  </div>
+
+  <div class="chart-row" style="margin-top:18px;">
+    <div class="chart-box"><h4>CLV Distribution by Acquisition Channel (Avg €)</h4><canvas id="chartChannel"></canvas></div>
+    <div class="chart-box"><h4>Discount Usage by Region (%)</h4><canvas id="chartRegionDisc"></canvas></div>
+  </div>
+
+  <div class="subsection-title">Key Exploration Findings</div>
+
+  <div class="finding">
+    <div class="finding-icon">📧</div>
+    <div class="finding-body">
+      <h4>Email engagement ≠ Customer value (r = 0.03–0.09)</h4>
+      <p>Email opens and clicks have near-zero correlation with CLV (r=0.032 and r=0.095 respectively). High email activity does not translate to higher spending or lifetime value. Cluster 1 has the highest email engagement (avg 19 opens) yet lower CLV than Cluster 2 whose members rarely open emails.</p>
+    </div>
+  </div>
+  <div class="finding">
+    <div class="finding-icon">🏷️</div>
+    <div class="finding-body">
+      <h4>Discount users have higher CLV but lower transaction value</h4>
+      <p>Customers who used discounts averaged CLV of €2,463 vs €2,078 for non-discount users — seemingly positive. However, their average spend per order (€919) is lower than non-discount users (€959), indicating discounts are inflating purchase counts while compressing margin. Cluster 0 — where 100% of customers used discounts — has the lowest CLV of all segments at €663.</p>
+    </div>
+  </div>
+  <div class="finding">
+    <div class="finding-icon">🔍</div>
+    <div class="finding-body">
+      <h4>Acquisition channel dramatically predicts CLV</h4>
+      <p>Paid search customers average CLV of €3,708 and organic search €2,991, while email-acquired customers (49% of the base) average only €1,632 — less than half the value of paid search. This represents a major resource-allocation problem: nearly half the customer base comes from the channel with the worst long-term value.</p>
+    </div>
+  </div>
+  <div class="finding">
+    <div class="finding-icon">🗺️</div>
+    <div class="finding-body">
+      <h4>Regional discount variation is significant</h4>
+      <p>East (48.6%) and South (49.1%) have nearly double the discount usage of the North region (23.1%). This suggests regionally differentiated pricing behaviour or sales team practices that deserve separate treatment.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════ T2 – CUSTOMER SEGMENTATION ══════════════════════╗ -->
+<div class="section">
+  <div class="section-title">T2. Customer Segmentation <span class="tag">CLUSTERING</span></div>
+
+  <div class="subsection-title">Methodology</div>
+  <p>K-means clustering was applied using six features: recency, frequency, monetary value, website visits, email opens, and discount usage. Features were standardised (z-score) before clustering. The optimal number of clusters was selected by comparing silhouette scores for k=2 through k=7.</p>
+
+  <div class="chart-row">
+    <div class="chart-box"><h4>Silhouette Score by Number of Clusters</h4><canvas id="chartSilhouette"></canvas></div>
+    <div class="chart-box"><h4>Cluster Size Distribution</h4><canvas id="chartClusterSize"></canvas></div>
+  </div>
+
+  <p style="margin-top:16px;">K=4 was selected (silhouette = 0.258, highest across all tested values), producing four interpretable and strategically meaningful segments.</p>
+
+  <div class="subsection-title">Cluster Profiles</div>
+  <div class="seg-grid">
+
+    <div class="seg-card seg-champions">
+      <h3>🏆 Champions</h3>
+      <div class="badge">Cluster 2 · Priority 1</div>
+      <p>The highest-value group. Very frequent buyers with exceptional lifetime value. Low email engagement but self-motivated purchasers who do not need discounts to convert.</p>
+      <div class="seg-stat">
+        <div class="seg-stat-row"><span>Size</span><span>80 (17.5%)</span></div>
+        <div class="seg-stat-row"><span>Avg CLV</span><span>€8,280</span></div>
+        <div class="seg-stat-row"><span>Avg Monetary</span><span>€1,920</span></div>
+        <div class="seg-stat-row"><span>Avg Frequency</span><span>18.7×</span></div>
+        <div class="seg-stat-row"><span>Recency (days)</span><span>17 days</span></div>
+        <div class="seg-stat-row"><span>Discount Usage</span><span>30%</span></div>
+        <div class="seg-stat-row"><span>Email Opens</span><span>6.2 avg</span></div>
+      </div>
+    </div>
+
+    <div class="seg-card seg-engaged">
+      <h3>💡 Engaged Potentials</h3>
+      <div class="badge">Cluster 1 · Priority 2</div>
+      <p>Moderate buyers who are highly active on email and website. Represent an upsell opportunity — their engagement is high but spending has not yet caught up.</p>
+      <div class="seg-stat">
+        <div class="seg-stat-row"><span>Size</span><span>79 (17.3%)</span></div>
+        <div class="seg-stat-row"><span>Avg CLV</span><span>€2,289</span></div>
+        <div class="seg-stat-row"><span>Avg Monetary</span><span>€962</span></div>
+        <div class="seg-stat-row"><span>Avg Frequency</span><span>10.1×</span></div>
+        <div class="seg-stat-row"><span>Recency (days)</span><span>31 days</span></div>
+        <div class="seg-stat-row"><span>Discount Usage</span><span>32%</span></div>
+        <div class="seg-stat-row"><span>Email Opens</span><span>19.2 avg</span></div>
+      </div>
+    </div>
+
+    <div class="seg-card seg-discount">
+      <h3>🏷️ Discount Hunters</h3>
+      <div class="badge">Cluster 0 · Priority 3</div>
+      <p>All customers in this cluster used discounts. Moderate recency but low CLV. They respond to promotions but show no organic buying behaviour — a margin risk if given further discounts.</p>
+      <div class="seg-stat">
+        <div class="seg-stat-row"><span>Size</span><span>121 (26.5%)</span></div>
+        <div class="seg-stat-row"><span>Avg CLV</span><span>€663</span></div>
+        <div class="seg-stat-row"><span>Avg Monetary</span><span>€656</span></div>
+        <div class="seg-stat-row"><span>Avg Frequency</span><span>7.2×</span></div>
+        <div class="seg-stat-row"><span>Recency (days)</span><span>39 days</span></div>
+        <div class="seg-stat-row"><span>Discount Usage</span><span>100%</span></div>
+        <div class="seg-stat-row"><span>Email Opens</span><span>6.0 avg</span></div>
+      </div>
+    </div>
+
+    <div class="seg-card seg-dormant">
+      <h3>😴 Dormant / Low-Value</h3>
+      <div class="badge">Cluster 3 · Deprioritise</div>
+      <p>Largest segment. Infrequent, low-spending, and not using discounts. These customers are the least engaged and have the lowest CLV. Further marketing spend on this group is unlikely to be ROI-positive.</p>
+      <div class="seg-stat">
+        <div class="seg-stat-row"><span>Size</span><span>177 (38.7%)</span></div>
+        <div class="seg-stat-row"><span>Avg CLV</span><span>€518</span></div>
+        <div class="seg-stat-row"><span>Avg Monetary</span><span>€691</span></div>
+        <div class="seg-stat-row"><span>Avg Frequency</span><span>6.9×</span></div>
+        <div class="seg-stat-row"><span>Recency (days)</span><span>43 days</span></div>
+        <div class="seg-stat-row"><span>Discount Usage</span><span>0%</span></div>
+        <div class="seg-stat-row"><span>Email Opens</span><span>5.5 avg</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection-title">Segment Summary Table</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Segment</th><th>Size</th><th>Avg CLV</th><th>Avg Spend</th><th>Discount %</th><th>Email Opens</th><th>Strategy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🏆 Champions</td><td>80</td><td>€8,280</td><td>€1,920</td><td>30%</td><td>Low (6)</td>
+        <td><span class="tag-green">Retain &amp; Protect</span></td>
+      </tr>
+      <tr>
+        <td>💡 Engaged Potentials</td><td>79</td><td>€2,289</td><td>€962</td><td>32%</td><td>High (19)</td>
+        <td><span class="tag-green">Grow &amp; Upsell</span></td>
+      </tr>
+      <tr>
+        <td>🏷️ Discount Hunters</td><td>121</td><td>€663</td><td>€656</td><td>100%</td><td>Low (6)</td>
+        <td><span class="tag-amber">Reduce Discounts</span></td>
+      </tr>
+      <tr>
+        <td>😴 Dormant</td><td>177</td><td>€518</td><td>€691</td><td>0%</td><td>Low (6)</td>
+        <td><span class="tag-grey">Deprioritise</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="chart-row" style="margin-top:24px;">
+    <div class="chart-box"><h4>Average CLV by Segment (€)</h4><canvas id="chartSegCLV"></canvas></div>
+    <div class="chart-box"><h4>Avg Frequency &amp; Monetary by Segment</h4><canvas id="chartSegMulti"></canvas></div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════ T3 – MARKETING EFFECTIVENESS ══════════════════════╗ -->
+<div class="section">
+  <div class="section-title">T3. Marketing Effectiveness <span class="tag">ANALYSIS</span></div>
+
+  <div class="subsection-title">1. Email Engagement vs Customer Value</div>
+  <div class="chart-row">
+    <div class="chart-box"><h4>Avg CLV by Email Opens Quintile</h4><canvas id="chartEmailCLV"></canvas></div>
+    <div class="chart-box"><h4>Email Opens vs Clicks Correlation (r = 0.90)</h4><canvas id="chartEmailCorr"></canvas></div>
+  </div>
+  <p style="margin-top:14px;">Email opens and email clicks are highly correlated with each other (r=0.90) but almost completely uncorrelated with CLV or monetary value (r≈0.03). This means the email campaigns are attracting and retaining customers who click a lot but do not spend. The most valuable customers (Champions) average only 6 email opens — they buy without being nudged by email.</p>
+  <div class="callout">
+    <p><strong>Conclusion:</strong> NovaRetail is over-investing in broad email marketing. Email volume predicts click behaviour but does NOT predict revenue or lifetime value. Reducing email campaign frequency to inactive/low-value segments will cut costs without hurting revenue.</p>
+  </div>
+
+  <div class="subsection-title">2. Discount Usage &amp; Long-Term Value</div>
+  <table style="max-width:600px;">
+    <thead><tr><th>Group</th><th>Count</th><th>Avg CLV</th><th>Avg Spend/Order</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td>No discount used</td><td>251</td><td>€2,078</td><td>€959</td><td><span class="tag-green">Higher per-order value</span></td></tr>
+      <tr><td>Discount used</td><td>206</td><td>€2,463</td><td>€919</td><td><span class="tag-amber">Lower per-order value</span></td></tr>
+      <tr><td>Cluster 0 (100% discount)</td><td>121</td><td>€663</td><td>€656</td><td><span class="tag-red">Lowest CLV in dataset</span></td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:14px;">The overall slightly higher CLV among discount users is misleading: it is driven by Champions (Cluster 2) who incidentally used some discounts but would likely buy anyway. The pure discount-dependent group (Cluster 0) has the worst CLV in the dataset. Discounts are creating a segment of conditional buyers — customers who only engage when prices are reduced, systematically depressing margin.</p>
+
+  <div class="subsection-title">3. Acquisition Channel Value Comparison</div>
+  <div class="chart-row">
+    <div class="chart-box"><h4>Avg CLV by Acquisition Channel (€)</h4><canvas id="chartChanBar"></canvas></div>
+    <div class="chart-box"><h4>Share of Customer Base by Channel</h4><canvas id="chartChanPie"></canvas></div>
+  </div>
+  <p style="margin-top:14px;">Paid search (€3,708) and organic search (€2,991) customers generate the highest lifetime value, yet together they represent only 23% of the customer base. Email-acquired customers (49% of base) generate the lowest CLV at €1,632 — less than half that of paid search. This is a structural mismatch between acquisition spend and value generation.</p>
+  <div class="callout callout-info">
+    <p><strong>Key insight:</strong> Every euro spent acquiring a customer via paid search generates approximately 2.3× the lifetime return of an email-acquired customer. NovaRetail should explore reallocating part of its email campaign budget toward paid search and organic content investment.</p>
+  </div>
+</div>
+
+<!-- ╔══════════════════════ T4 – STRATEGIC RECOMMENDATIONS ══════════════════════╗ -->
+<div class="section">
+  <div class="section-title">4. Strategic Recommendations <span class="tag">BUSINESS REPORT</span></div>
+  <p style="margin-top:14px;">The following three actions are prioritised by expected ROI, feasibility for a medium-sized retailer, and alignment with a constrained marketing budget. All are grounded directly in the data findings above.</p>
+
+  <div class="action-grid">
+
+    <!-- ACTION 1 -->
+    <div class="action-card">
+      <div class="action-num">Action 01 · Highest Priority</div>
+      <h3>🎯 Launch a VIP Retention Programme for Champions</h3>
+      <p style="margin-top:8px;font-size:0.9rem;line-height:1.7;">
+        Champions (Cluster 2, 80 customers) generate an average CLV of <strong>€8,280</strong> — nearly 4× the overall average. Their average recency is only 17 days, meaning they are active right now. Yet they receive the same generic email campaigns as everyone else, despite being virtually unresponsive to email (avg 6 opens).
+      </p>
+      <p style="margin-top:8px;font-size:0.9rem;line-height:1.7;">
+        Replace bulk email with a lightweight <strong>VIP programme</strong>: priority customer service access, early product previews, and non-discount loyalty rewards (points, exclusive products). This costs significantly less than discount promotions while signalling genuine recognition. Given an assumed gross margin of 35–40% (typical for lifestyle retail), the incremental retention of even 10 additional Champions represents ~€80,000+ in lifetime revenue.
+      </p>
+      <div class="action-meta">
+        <div class="action-meta-item"><div class="label">Targets</div><div class="val">Champions (80 customers)</div></div>
+        <div class="action-meta-item"><div class="label">Budget Impact</div><div class="val">Low-cost (no discounts)</div></div>
+        <div class="action-meta-item"><div class="label">Expected Benefit</div><div class="val">Protect highest-CLV segment</div></div>
+        <div class="action-meta-item"><div class="label">Trade-off</div><div class="val">Requires manual curation</div></div>
+      </div>
+    </div>
+
+    <!-- ACTION 2 -->
+    <div class="action-card">
+      <div class="action-num">Action 02 · High Priority</div>
+      <h3>✂️ Discontinue Blanket Discounting — Restrict to Upsell Use Only</h3>
+      <p style="margin-top:8px;font-size:0.9rem;line-height:1.7;">
+        Cluster 0 (121 customers, 26.5% of the base) is defined entirely by discount dependency — every single customer used a discount, yet they have the <strong>lowest CLV in the dataset (€663)</strong>. East and South regions, where discount rates reach 49%, are generating systematically lower-margin customers. Continued blanket discounting in these regions is training customers to wait for promotions rather than buying at full price.
+      </p>
+      <p style="margin-top:8px;font-size:0.9rem;line-height:1.7;">
+        NovaRetail should eliminate untargeted discount codes from mass email campaigns (e.g., the February 2017 SAVE10 campaign style). Instead, restrict discounts to two specific uses: (1) <em>first-time purchase conversion</em> for new high-potential prospects, and (2) <em>strategic upsell</em> to move Engaged Potentials toward Champion-tier spend. At an assumed 10% discount on €656 average spend per Cluster 0 customer, removing the discount saves approximately €7,938 per campaign cycle from this segment alone — without necessarily losing sales from customers who were purchasing due to the product, not the price.
+      </p>
+      <div class="action-meta">
+        <div class="action-meta-item"><div class="label">Targets</div><div class="val">Cluster 0 (121) &amp; East/South</div></div>
+        <div class="action-meta-item"><div class="label">Budget Impact</div><div class="val">Direct cost saving (~€8k+/cycle)</div></div>
+        <div class="action-meta-item"><div class="label">Expected Benefit</div><div class="val">Margin recovery, price discipline</div></div>
+        <div class="action-meta-item"><div class="label">Trade-off</div><div class="val">Short-term volume may dip</div></div>
+      </div>
+    </div>
+
+    <!-- ACTION 3 -->
+    <div class="action-card">
+      <div class="action-num">Action 03 · Medium Priority</div>
+      <h3>📡 Rebalance Acquisition Budget Away from Email, Toward Paid &amp; Organic Search</h3>
+      <p style="margin-top:8px;font-size:0.9rem;line-height:1.7;">
+        Email acquisition accounts for 49% of the customer base but produces the lowest CLV (€1,632). Paid search customers (11% of base) generate CLV of €3,708 — 127% higher. Organic search (13% of base) generates €2,991. The current acquisition mix is heavily tilted toward a channel that systematically under-delivers on lifetime value.
+      </p>
+      <p style="margin-top:8px;font-size:0.9rem;line-height=1.7;">
+        We recommend redirecting 20–30% of the email campaign budget toward: (a) <strong>SEO content investment</strong> to grow the organic search channel (currently only 59 customers but CLV of €2,991), and (b) a <strong>measured test of paid search scaling</strong> to validate whether the CLV advantage holds as volume grows. Simultaneously, email campaigns should be reduced to 2–3 targeted segments (Champions, Engaged Potentials, and new prospects) rather than the full 560-customer base — cutting software and management costs while maintaining relevance.
+      </p>
+      <div class="action-meta">
+        <div class="action-meta-item"><div class="label">Targets</div><div class="val">Acquisition mix rebalance</div></div>
+        <div class="action-meta-item"><div class="label">Budget Impact</div><div class="val">Reallocate 20–30% email budget</div></div>
+        <div class="action-meta-item"><div class="label">Expected Benefit</div><div class="val">Higher CLV per new customer</div></div>
+        <div class="action-meta-item"><div class="label">Trade-off</div><div class="val">SEO is slow; 6–12 month horizon</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Priority Matrix Summary -->
+  <div class="subsection-title">Priority Matrix</div>
+  <table>
+    <thead>
+      <tr><th>Segment</th><th>CLV Tier</th><th>Investment Recommendation</th><th>Email Strategy</th><th>Discount Strategy</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🏆 Champions (80)</td>
+        <td>€8,280</td>
+        <td><span class="tag-green">High — VIP programme</span></td>
+        <td>Minimal / personal</td>
+        <td>Avoid — not needed</td>
+      </tr>
+      <tr>
+        <td>💡 Engaged Potentials (79)</td>
+        <td>€2,289</td>
+        <td><span class="tag-green">Medium — targeted upsell</span></td>
+        <td>Targeted, behavioural</td>
+        <td>Selective upsell only</td>
+      </tr>
+      <tr>
+        <td>🏷️ Discount Hunters (121)</td>
+        <td>€663</td>
+        <td><span class="tag-amber">Low — test without discounts</span></td>
+        <td>Reduce frequency</td>
+        <td>Remove discounts</td>
+      </tr>
+      <tr>
+        <td>😴 Dormant (177)</td>
+        <td>€518</td>
+        <td><span class="tag-red">Minimal — suppress or drop</span></td>
+        <td>Suppress / annual only</td>
+        <td>None</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top:24px;">
+    <p><strong>Budget reallocation summary:</strong> By suppressing email campaigns for the Dormant segment (177 customers, 31% of current email list), and removing discount codes from Discount Hunter communications, NovaRetail can materially reduce campaign software costs and discount spend with minimal revenue risk — since these segments already show the lowest purchasing value. Resources freed can be redirected to retaining Champions and testing higher-value acquisition channels.</p>
+  </div>
+</div>
+
+<!-- ╔══════════════════════ METHODOLOGY NOTE ══════════════════════╗ -->
+<div class="section">
+  <div class="section-title">Methodology Notes <span class="tag">TECHNICAL</span></div>
+  <p>K-means clustering was performed on standardised features (StandardScaler). Silhouette analysis across k=2–7 selected k=4 as optimal. Clustering features: recency, frequency, monetary, website_visits, email_opens, discount_used. Missing values imputed by column median. Correlation analysis used Pearson r. Profit margin estimates use a 35–40% assumption typical for lifestyle retail; actual margin data would sharpen financial projections. All monetary figures in Euros (€).</p>
+</div>
+
+</div><!-- /page -->
+
+<footer>NovaRetail Marketing Intelligence Report · Prepared for the Marketing Director · Confidential · March 2026</footer>
+
+<!-- ══════════════════ CHARTS ══════════════════ -->
+<script>
+const colors = {
+  champions: '#2a9d5c',
+  engaged:   '#0e7c86',
+  discount:  '#e07b39',
+  dormant:   '#888888',
+  navy:      '#1a2e4a',
+  teal:      '#0e7c86',
+};
+
+// Frequency distribution
+new Chart(document.getElementById('chartFreq'), {
+  type: 'bar',
+  data: {
+    labels: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+    datasets: [{
+      label: 'Customers',
+      data: [9,22,26,36,33,33,34,43,24,30,23,24,24,16,11,10,9,10,5,8],
+      backgroundColor: '#0e7c8680',
+      borderColor: '#0e7c86', borderWidth: 1,
+    }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Count'}},x:{title:{display:true,text:'Purchase Frequency'}}} }
+});
+
+// Monetary distribution
+new Chart(document.getElementById('chartMon'), {
+  type: 'bar',
+  data: {
+    labels: ['€0–500','€500–1k','€1k–1.5k','€1.5k–2k','€2k–3.5k'],
+    datasets: [{
+      label: 'Customers',
+      data: [126, 148, 107, 45, 31],
+      backgroundColor: ['#c0392b80','#e07b3980','#f1c40f80','#2a9d5c80','#1a2e4a80'],
+      borderColor:     ['#c0392b','#e07b39','#c8a000','#2a9d5c','#1a2e4a'],
+      borderWidth: 1,
+    }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Count'}}} }
+});
+
+// CLV by acquisition channel
+new Chart(document.getElementById('chartChannel'), {
+  type: 'bar',
+  data: {
+    labels: ['Email','Social Media','Referral','Organic Search','Paid Search'],
+    datasets: [{
+      label: 'Avg CLV (€)',
+      data: [1632, 2158, 2696, 2991, 3708],
+      backgroundColor: ['#c0392b90','#e07b3990','#f1c40f90','#2a9d5c90','#1a2e4a90'],
+      borderColor:     ['#c0392b','#e07b39','#c8a000','#2a9d5c','#1a2e4a'],
+      borderWidth: 1,
+    }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Avg CLV (€)'},beginAtZero:true}} }
+});
+
+// Discount by region
+new Chart(document.getElementById('chartRegionDisc'), {
+  type: 'bar',
+  data: {
+    labels: ['North','West','East','South'],
+    datasets: [{
+      label: '% Discount Usage',
+      data: [23.1, 38.5, 48.6, 49.1],
+      backgroundColor: ['#2a9d5c80','#0e7c8680','#e07b3980','#c0392b80'],
+      borderColor:     ['#2a9d5c','#0e7c86','#e07b39','#c0392b'],
+      borderWidth: 1,
+    }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Discount Rate (%)'},max:70}} }
+});
+
+// Silhouette
+new Chart(document.getElementById('chartSilhouette'), {
+  type: 'line',
+  data: {
+    labels: [2,3,4,5,6,7],
+    datasets: [{
+      label: 'Silhouette Score',
+      data: [0.2459, 0.2412, 0.2578, 0.2350, 0.2478, 0.2465],
+      borderColor: colors.teal, backgroundColor: colors.teal+'30',
+      pointRadius: 6, pointBackgroundColor: [colors.teal,colors.teal,'#c0392b',colors.teal,colors.teal,colors.teal],
+      tension: 0.3, fill: true,
+    }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{min:0.22,max:0.27,title:{display:true,text:'Silhouette Score'}}} }
+});
+
+// Cluster sizes
+new Chart(document.getElementById('chartClusterSize'), {
+  type: 'doughnut',
+  data: {
+    labels: ['🏷️ Discount Hunters (Cl.0)','💡 Engaged Potentials (Cl.1)','🏆 Champions (Cl.2)','😴 Dormant (Cl.3)'],
+    datasets: [{ data: [121,79,80,177], backgroundColor: [colors.discount, colors.engaged, colors.champions, colors.dormant], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { plugins:{ legend:{ position:'bottom', labels:{font:{size:11}, boxWidth:14} } } }
+});
+
+// Segment CLV
+new Chart(document.getElementById('chartSegCLV'), {
+  type: 'bar',
+  data: {
+    labels: ['🏷️ Discount\nHunters','😴 Dormant','💡 Engaged\nPotentials','🏆 Champions'],
+    datasets: [{ label:'Avg CLV (€)', data:[663,518,2289,8280], backgroundColor:[colors.discount,colors.dormant,colors.engaged,colors.champions] }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Avg CLV (€)'},beginAtZero:true}} }
+});
+
+// Segment multi
+new Chart(document.getElementById('chartSegMulti'), {
+  type: 'bar',
+  data: {
+    labels: ['Discount Hunters','Engaged Potentials','Champions','Dormant'],
+    datasets: [
+      { label:'Avg Frequency', data:[7.2,10.1,18.7,6.9], backgroundColor: colors.teal+'90' },
+      { label:'Avg Spend (÷100)', data:[6.56,9.62,19.2,6.91], backgroundColor: colors.navy+'90' },
+    ]
+  },
+  options: { plugins:{legend:{position:'bottom'}}, scales:{y:{title:{display:true,text:'Value'}}} }
+});
+
+// Email CLV by quintile
+new Chart(document.getElementById('chartEmailCLV'), {
+  type: 'bar',
+  data: {
+    labels: ['0–9 opens','9–18 opens','18–26 opens','26–35 opens','35–44 opens'],
+    datasets: [{ label:'Avg CLV (€)', data:[2370,1469,2538,7429,1256], backgroundColor:[colors.teal+'80',colors.teal+'80',colors.teal+'80','#c0392b80',colors.teal+'80'], borderColor: colors.teal, borderWidth:1 }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Avg CLV (€)'},beginAtZero:true}} }
+});
+
+// Email opens vs clicks (simplified scatter as bar comparison)
+new Chart(document.getElementById('chartEmailCorr'), {
+  type: 'bar',
+  data: {
+    labels: ['Email Opens vs\nEmail Clicks','Email Opens vs CLV','Email Opens vs Monetary','Email Clicks vs CLV'],
+    datasets: [{ label:'Pearson r', data:[0.90, 0.032, -0.009, 0.095], backgroundColor:['#2a9d5c90','#c0392b90','#c0392b90','#c0392b90'], borderColor:['#2a9d5c','#c0392b','#c0392b','#c0392b'], borderWidth:1 }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{min:-0.1,max:1.1,title:{display:true,text:'Correlation (r)'}}} }
+});
+
+// Channel CLV bar
+new Chart(document.getElementById('chartChanBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Email','Social Media','Referral','Organic Search','Paid Search'],
+    datasets: [{ label:'Avg CLV (€)', data:[1632,2158,2696,2991,3708], backgroundColor:['#c0392b80','#e07b3980','#f1c40f80','#2a9d5c80','#1a2e4a80'], borderColor:['#c0392b','#e07b39','#c8a000','#2a9d5c','#1a2e4a'], borderWidth:1 }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,title:{display:true,text:'Avg CLV (€)'}}} }
+});
+
+// Channel pie
+new Chart(document.getElementById('chartChanPie'), {
+  type: 'pie',
+  data: {
+    labels: ['Email (226)','Social Media (81)','Organic Search (59)','Paid Search (49)','Referral (42)'],
+    datasets: [{ data:[226,81,59,49,42], backgroundColor:['#c0392b','#e07b39','#2a9d5c','#1a2e4a','#0e7c86'], borderWidth:2, borderColor:'#fff' }]
+  },
+  options: { plugins:{ legend:{ position:'bottom', labels:{font:{size:11},boxWidth:14} } } }
+});
+</script>
+</body>
+</html>
